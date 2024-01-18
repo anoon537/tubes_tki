@@ -13,7 +13,6 @@ app = Flask(__name__)
 nltk.download('punkt')
 nltk.download('stopwords')
 
-# Ganti dengan stopwords Bahasa Indonesia
 stop_words_id = set(stopwords.words('indonesian'))
 
 def preprocess_document(document):
@@ -24,56 +23,56 @@ def preprocess_document(document):
     words = [stemmer.stem(word) for word in words]
     return ' '.join(words)
 
-# Read documents from folder
+# Membaca dokumen
 def read_documents_from_folder(folder_path):
     file_names = os.listdir(folder_path)
     corpus = []
-    document_names = []  # Tambahkan list untuk menyimpan nama dokumen
+    document_names = []  
     for file_name in file_names:
         file_path = os.path.join(folder_path, file_name)
         with open(file_path, 'r', encoding='utf-8') as file:
             document_content = file.read()
             corpus.append(document_content)
-            document_names.append(file_name)  # Simpan nama dokumen
+            document_names.append(file_name)
     return corpus, document_names
 
-# Indexing and Term Weighting
+# Indexing & Term Weighting
 folder_path = "Antara News Corpus"
 corpus, document_names = read_documents_from_folder(folder_path)
 preprocessed_documents = [preprocess_document(doc) for doc in corpus]
-
 vectorizer = TfidfVectorizer()
 tfidf_matrix = vectorizer.fit_transform(preprocessed_documents)
 
 # Searching
 def search(query, vectorizer, tfidf_matrix, document_names):
-    start_time = time.time()  # Catat waktu awal
+    start_time = time.time()  
     preprocessed_query = preprocess_document(query)
     query_vector = vectorizer.transform([preprocessed_query])
     similarity_scores = cosine_similarity(query_vector, tfidf_matrix).flatten()
 
-    # Ukur waktu untuk setiap dokumen
     elapsed_times = [time.time() - start_time] * len(corpus)
-
-    # Filter hasil dengan skor kemiripan lebih dari 0
     non_zero_similarity_results = [
         (document_names[index], document, document.lower().count(preprocessed_query.lower()), similarity, elapsed_time)
         for index, (document, similarity, elapsed_time) in enumerate(zip(corpus, similarity_scores, elapsed_times))
         if similarity > 0
     ]
 
-    # Mengurutkan hasil berdasarkan skor kemiripan secara menurun
+    if not non_zero_similarity_results:
+        non_zero_similarity_results.append(("Not Found", "", 0, 0, 0))
+
     sorted_results = sorted(non_zero_similarity_results, key=lambda x: x[3], reverse=True)
 
-    return sorted_results
+    relevant_document_count = sum(1 for result in non_zero_similarity_results if result[3] > 0)
+
+    return sorted_results, relevant_document_count
 
 # UI/UX
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
         query = request.form['query']
-        results = search(query, vectorizer, tfidf_matrix, document_names)
-        return render_template('index.html', query=query, results=results)
+        results, relevant_document_count = search(query, vectorizer, tfidf_matrix, document_names)
+        return render_template('index.html', query=query, results=results, relevant_document_count=relevant_document_count)
     return render_template('index.html')
 
 if __name__ == '__main__':

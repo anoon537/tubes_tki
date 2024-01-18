@@ -1,33 +1,107 @@
-<!-- templates/index.html -->
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Search Results</title>
+    <title>Information Retrieval System</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        background-color: #f8f9fa;
+        transition: background-color 0.3s;
+        font-family: "Montserrat", sans-serif;
+      }
+    </style>
   </head>
   <body>
-    <h1>Search Results</h1>
-    <form method="POST" action="/">
-      <input type="text" name="query" placeholder="Search..." required />
-      <button type="submit">Search</button>
-    </form>
-    {% if results %}
-    <ul>
+    <div class="container-md mt-5 p-5">
+      <h1 class="text-md-center">Information Retrieval System - Technology</h1>
+
+      <form method="post" action="/">
+        <div class="form-group">
+          <label for="query">Masukkan kata:</label>
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              id="query"
+              name="query"
+              required
+            />
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+
+      {% if results %} {% if results[0][0] == "Not Found" %}
+      <div class="alert alert-warning mt-4" role="alert">
+        Kata yang dicari tidak ditemukan.
+      </div>
+      {% else %}
+      <div class="alert alert-info mt-4" role="alert">
+        Jumlah dokumen relevan dengan query: {{ relevant_document_count }}
+      </div>
       {% for result in results %}
-      <li>
-        <a href="{{ url_for('document', document_name=result[0]) }}"
-          >{{ result[0] }}</a
-        >
-        <p>
-          Similarity Score: {{ result[3] }} | Elapsed Time: {{ result[4] }}
-          seconds
-        </p>
-      </li>
-      {% endfor %}
-    </ul>
-    {% endif %}
+      <p class="card-text m-2">
+        Elapsed Time:
+        <span class="elapsed-time text-danger">{{ result[4] }} seconds</span>
+      </p>
+      <div class="card mt-2">
+        <div class="card-body">
+          <h5 class="card-title fw-bold">Document: {{ result[0] }}</h5>
+          <p class="card-text">Banyaknya term yang muncul: {{ result[2] }}</p>
+          <p class="card-text">Skor kemiripan: {{ result[3] }}</p>
+          <p class="card-text">
+            {% for word in result[1].split() %} {% if word.lower() ==
+            query.lower() %}
+            <mark class="text-primary">{{ word }}</mark>
+            {% else %} {{ word }} {% endif %} {% endfor %}
+          </p>
+        </div>
+      </div>
+      {% endfor %} {% endif %} {% endif %}
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script
+      src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Font Awesome JS -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"
+      crossorigin="anonymous"
+    ></script>
   </body>
 </html>
